@@ -46,7 +46,7 @@ repositório ou em documento estruturado dentro da pasta /docs).
 Nome do Integrante Matrícula Usuário GitHub (@) Papel Principal no Time
 
 [Nome Completo 1] [Matrícula] @usuario1 Product Owner (PO)
-[Nome Completo 2] [Matrícula] @usuario2 Scrum Master (SM)
+[Sofia Barros de Jesus] [2026111954] @24sofiabarros Scrum Master (SM)
 [Nome Completo 3] [Matrícula] @usuario3 Desenvolvedor / Equipe
 Técnica
 [Nome Completo 4] [Matrícula] @usuario4 Desenvolvedor / Equipe
