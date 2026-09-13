@@ -1,6 +1,6 @@
 # Projeto Integrador (PI) - Sprint 1
 
-Este repositório contém a entrega da Sprint 1, abordando o Setup Ágil, Engenharia de Requisitos, Repositório Git e estruturação inicial em MVC.
+Este repositório contém a entrega da Sprint 1, abordando o Setup Ágil, Engenharia de Requisitos, Repositório Git e estruturação inicial em MVC..
 
 ## 2.1. Identificação da Equipe e Links
 
