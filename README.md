@@ -182,7 +182,7 @@ UML
 Inclusão coerente de diagramas de Casos de Uso,
 Classes ou Sequência na documentação.
 + 10% (Extra)
-
+.
 
 
 
