@@ -1,226 +1,88 @@
-Projeto Integrador (PI) - Sprint 1
+# Projeto Integrador (PI) - Sprint 1
 
-1. Orientações Gerais da Atividade
-Esta atividade tem como objetivo consolidar os conceitos trabalhados em sala de aula
-(Metodologias Ágeis/Scrum, Engenharia de Requisitos, Git e Estruturação de Projetos),
-aplicando-os diretamente ao Projeto Integrador do semestre. Os grupos (compostos por 5
-integrantes) devem estruturar a base do projeto, estabelecer os papéis de liderança técnica e
-de negócio, mapear os requisitos com critérios de aceitação e comprovar a colaboração
-individual no controle de versão.
+Este repositório contém a entrega da Sprint 1, abordando o Setup Ágil, Engenharia de Requisitos, Repositório Git e estruturação inicial em MVC..
 
-1.1. Itens Obrigatórios de Entrega
+## 2.1. Identificação da Equipe e Links
 
-● Repositório no GitHub: Criação de repositório da equipe com estrutura inicial de
-diretórios para projeto em Python (ex.: pasta de código-fonte src/, pasta de
-documentação docs/, arquivo .gitignore para Python e arquivo de dependências
-requirements.txt ou pyproject.toml).
+| Nome do Integrante | Matrícula | E-mail | Papel Principal no Time |
+|---|---|---|---|
+| Hyago Queiroz | 2026111524 | hyago.queiroz@mail.uft.edu.br | Product Owner (PO) |
+| Vitória Alves | 2026110968 | vitoria.alves1@mail.uft.edu.br | Scrum Master (SM) |
+| Sofia Barros | 2026111954 | sofia.barros@mail.uft.edu.br | Desenvolvedor / Equipe Técnica |
+| Ludmylla Teixeira | 2026111870 | ludmylla.teixeira@mail.udt.edu.br | Desenvolvedor / Equipe Técnica |
+| Maiara Ktidi Xerente | 2026111868 | maiara.xerente@mail.uft.edu.br | Desenvolvedor / Equipe Técnica |
 
-● Comprovação de Participação Individual (Git): Todos os 5 membros devem ser
-colaboradores do repositório e possuir histórico de contribuições registrado (commits).
-Deve ser anexado um print/captura de tela da aba Insights > Contributors ou do
-histórico de Commits do repositório, evidenciando o autor e a mensagem de commit de
-cada estudante.
+**Link do Repositório GitHub:** https://github.com/24sofiabarros/projeto_integrador_II
 
-● Definição e Justificativa de Papéis: Designação do Product Owner (PO) e do Scrum
-Master (SM), acompanhada da fundamentação teórica de suas atribuições.
+---
 
-● Mapeamento de Requisitos Funcionais: Especificação de no mínimo 10 Requisitos
-Funcionais (RF) estruturados com seus respectivos Critérios de Aceite testáveis.
+## 2.2. Fundamentação e Dinâmica dos Papéis Ágeis
 
-● Requisitos Não Funcionais: Mapeamento de 3 a 5 Requisitos Não Funcionais (RNF)
-voltados a restrições de tecnologia, usabilidade e portabilidade.
+### A) Product Owner (PO)
+1. **Quem é o Product Owner da equipe?**
+   [Nome do Integrante PO]
+2. **Quais são as principais atribuições e responsabilidades do PO perante o Projeto Integrador?**
+   [Preencher fundamentação]
+3. **Como o PO validará se as funcionalidades entregues cumprem o propósito do projeto?**
+   [Preencher validação]
 
-● Matriz de Priorização MoSCoW: Classificação de todo o escopo levantado nas
-categorias Must Have, Should Have, Could Have e Won't Have.
+### B) Scrum Master (SM)
+1. **Quem é o Scrum Master da equipe?**
+   [Nome do Integrante SM]
+2. **Quais são as responsabilidades do Scrum Master na condução do time?**
+   [Preencher responsabilidades]
+3. **Qual será o canal de comunicação oficial da equipe e a frequência dos alinhamentos semanais?**
+   [Preencher comunicação]
 
-● Modelagem UML (Opcional): Inclusão de diagramas (Casos de Uso, Classes ou
-Sequência) na pasta docs/ como documentação de apoio.
-
-2. Roteiro e Template de Preenchimento da Equipe
+---
 
-(A equipe deve transcrever e preencher as seções a seguir diretamente no README.md do
-repositório ou em documento estruturado dentro da pasta /docs).
+## 2.3. Especificação de Requisitos Funcionais (RF)
 
-2.1. Identificação da Equipe e Links
+| ID | Nome do Requisito | Descrição / História de Usuário | Critérios de Aceite (Validação) |
+| :--- | :--- | :--- | :--- |
+| **RF01** | Autenticação e Controle de Acesso Baseado em Perfis (RBAC) | O sistema deve autenticar gestores, auditores fiscais e operadores da Secretaria Municipal de Finanças de Palmas via credenciais institucionais seguras com duplo fator (MFA) ou Gov.br, garantindo controle de acesso granular baseado em papéis (RBAC). | 1. O sistema deve bloquear tentativas de acesso não autenticadas ou com perfis não autorizados em rotas restritas, registrando tentativa inválida após 3 falhas consecutivas.<br>2. Usuários com perfil 'Gestor Fazendário' devem ter acesso a visões agregadas e estratégicas, enquanto 'Auditores Fiscais' devem ter acesso a dados fiscais analíticos e ferramentas de cruzamento. |
+| **RF02** | Ingestão e Integração de Dados de APIs Externas Governamentais | O sistema deve consumir dados de bases externas governamentais (como Receita Federal/CNPJ, Cartórios de Registro de Imóveis e Detran-TO) de forma agendada ou sob demanda para enriquecer e sincronizar a base cadastral tributária de Palmas (IPTU, ISS, ITBI). | 1. Ao disparar a sincronização com serviço externo, o sistema deve processar os dados retornados com sucesso (código HTTP 200) e atualizar os registros cadastrais em lote validando integridade estrutural.<br>2. Em caso de indisponibilidade da API externa (timeout ou código HTTP 5xx), o sistema deve registrar a falha em log de erros, manter o estado íntegro dos dados prévios e disparar retentativa automática com recuo exponencial. |
+| **RF03** | Cruzamento Automatizado de Dados Fiscais e Cadastrais | O sistema deve cruzar automaticamente informações fiscais declaradas por cidadãos e empresas de Palmas (notas fiscais de serviços eletrônicas - NFS-e, declarações de faturamento e cadastros imobiliários) com as bases de dados externas para identificar inconsistências cadastrais e divergências de receita. | 1. O sistema deve confrontar as declarações de faturamento de ISS com dados de emissão de NFS-e e pagamentos eletrônicos, sinalizando registros em que a diferença ultrapasse a margem de tolerância definida em configuração (ex.: 5%).<br>2. A rotina de cruzamento deve gerar um relatório detalhado contendo a lista de contribuintes divergentes, valores apurados e data/hora de execução da conciliação. |
+| **RF04** | Detecção e Geração de Alertas de Indícios de Fraude e Inconsistências | O sistema deve gerar alertas automáticos classificados por grau de criticidade (Baixa, Média, Alta) sempre que forem detectadas incongruências patrimoniais, subavaliação de ITBI ou sinais de sonegação fiscal. | 1. Cada alerta gerado deve indicar claramente o contribuinte (CPF/CNPJ), a tipologia do indício identificado, o valor estimado de inconsistência e a severidade calculada pelo motor de regras.<br>2. O sistema deve disponibilizar um fluxo de gestão de alertas onde o auditor possa alterar o status para 'Pendente', 'Em Apuração', 'Procedente' ou 'Descartado', exigindo justificativa textual obrigatória para encerramento. |
+| **RF05** | Painel de Bordo Gerencial e Apoio à Tomada de Decisão (Dashboard) | O sistema deve fornecer aos gestores da Secretaria de Finanças um painel visual e interativo contendo indicadores-chave de desempenho (KPIs) da arrecadação municipal (IPTU, ISS, ITBI), índices de inadimplência, projeções de receita e mapas de concentração de dívida ativa em Palmas. | 1. O painel deve permitir filtros dinâmicos por tributo, exercício financeiro, mês e zona fiscal, recalculando e renderizando os gráficos analíticos em até 3 segundos.<br>2. Todos os valores sumarizados apresentados no dashboard devem coincidir exatamente com a soma dos lançamentos validados na base relacional do sistema. |
+| **RF06** | Consulta Cadastral e Fiscal Unificada do Contribuinte | O sistema deve disponibilizar funcionalidade de busca unificada por CPF ou CNPJ que consolide em tela única toda a ficha cadastral do contribuinte, imóveis vinculados, histórico de recolhimentos, parcelamentos e certidões ativas. | 1. Ao submeter um CPF/CNPJ válido, o sistema deve apresentar a ficha unificada completa em menos de 2 segundos, exibindo débitos vencidos e a vencer segregados por exercício.<br>2. Caso o identificador consultado não exista na base local, o sistema deve informar mensagem amigável e permitir ao auditor consultar a existência do cadastro nas bases externas integradas. |
+| **RF07** | Emissão de Notificações Fiscais Administrativas e Cobrança | O sistema deve gerar minutas de notificação fiscal de cobrança e autos de intimação administrativa em formato PDF padronizado para contribuintes com divergências ou débitos confirmados. | 1. O documento PDF gerado deve conter o brasão oficial da Prefeitura de Palmas, número de processo fiscal, chave de autenticação digital única e QR Code para validação pública de autenticidade.<br>2. O sistema deve registrar o histórico de notificações emitidas na ficha do contribuinte, com registro de data de emissão, canal de envio e status de ciência/entrega. |
+| **RF08** | Portal de Autoconsulta e Regularização Tributária para o Cidadão | O sistema deve disponibilizar portal de autoatendimento para o contribuinte municipal consultar seus tributos (IPTU, ISS, taxas), emitir guias de recolhimento (DAM) com PIX/código de barras e abrir solicitações de revisão cadastral. | 1. O munícipe deve conseguir gerar o Documento de Arrecadação Municipal (DAM) para pagamento à vista ou parcelado, com código de barras e chave PIX Copia e Cola válidos.<br>2. Ao submeter pedido de revisão cadastral ou contestação de lançamento, o sistema deve emitir protocolo de acompanhamento e anexar os comprovantes fiscais enviados para análise do auditor. |
+| **RF09** | Simulação de Cenários de Arrecadação e Impacto Tributário | O sistema deve disponibilizar ferramenta de modelagem preditiva para gestores simularem o impacto financeiro de políticas fiscais públicas (concessão de descontos em IPTU, alteração de alíquotas de ISS e programas de parcelamento incentivado - REFIS). | 1. O gestor deve ser capaz de definir variáveis de simulação (percentuais de desconto, projeção de adesão) e visualizar comparativo de impacto entre a receita projetada e o exercício fiscal anterior.<br>2. O resultado da simulação deve poder ser exportado em formatos abertos (CSV e PDF) com resumo dos parâmetros aplicados para subsidiar peças de planejamento orçamentário (LDO/LOA). |
+| **RF10** | Trilha de Auditoria e Logs de Conformidade (LGPD e Segurança Pública) | O sistema deve registrar de forma auditável e imutável todas as operações realizadas pelos usuários sobre dados pessoais e fiscais, atendendo às exigências da LGPD e normas de transparência e segurança pública. | 1. Toda visualização de dados sensíveis, alteração de status fiscal, cruzamento de dados ou exportação de relatórios deve registrar log com identificador do usuário, perfil, timestamp ISO-8601, endereço IP e ação executada.<br>2. O módulo de trilha de auditoria deve ser acessível apenas por administradores e fiscais com permissão de correição, proibindo estritamente a alteração ou exclusão de quaisquer registros de log. |
 
-Nome do Integrante Matrícula Usuário GitHub (@) Papel Principal no Time
+### 2.3.1. Diagrama de Casos de Uso (UML)
 
-[Nome Completo 1] [Matrícula] @usuario1 Product Owner (PO)
-[Sofia Barros de Jesus] [2026111954] @24sofiabarros Scrum Master (SM)
-[Nome Completo 3] [Matrícula] @usuario3 Desenvolvedor / Equipe Técnica
-[Nome Completo 4] [Matrícula] @usuario4 Desenvolvedor / Equipe
-Técnica
-[Nome Completo 5] [Matrícula] @usuario5 Desenvolvedor / Equipe
-Técnica
+O diagrama abaixo apresenta os principais casos de uso decorrentes dos requisitos funcionais especificados acima, mapeando as interações dos atores (**Gestor Fazendário / Auditor Fiscal**, **Cidadão / Contribuinte** e **Sistemas Externos**) com as fronteiras do sistema SITRIB:
 
-Link do Repositório GitHub: https://github.com/usuario/nome-do-repositorio
+![Diagrama de Casos de Uso](./docs/diagrama_casos_uso.png)
 
-2.2. Fundamentação e Dinâmica dos Papéis Ágeis
+---
 
-A) Product Owner (PO)
-1. Quem é o Product Owner da equipe?
-2. Quais são as principais atribuições e responsabilidades do PO perante o Projeto Integrador?
-(Ex.: domínio das regras de negócio, interface com o cliente/professor, priorização contínua do
-Backlog e validação das entregas segundo os critérios de aceite).
-3.Como o PO validará se as funcionalidades entregues pelos desenvolvedores realmente
-cumprem o propósito do projeto?
-
-B) Scrum Master (SM)
-1. Quem é o Scrum Master da equipe?
-2. Quais são as responsabilidades do Scrum Master na condução do time?
-3. Qual será o canal de comunicação oficial da equipe e a frequência dos alinhamentos
-semanais?
-
-2.3. Especificação de Requisitos Funcionais (RF)
-
-Apresente no mínimo 5 requisitos funcionais do sistema. Cada requisito deve ter uma
-descrição clara (ou formato de História de Usuário) e critérios de aceite objetivos e testáveis.
-
-ID Nome do Requisito Descrição / História de Usuário Critérios de Aceite
-(Validação)
-
-RF01 Cadastro de Usuário O sistema deve permitir o registro de
-novos usuários com e-mail, nome e senha.
-1. E-mail deve ser validado e
-único.
-2. Senha deve possuir tamanho
-mínimo.
-3. Retornar mensagem clara de
-confirmação.
-
-RF02 Autenticação no Sistema O sistema deve autenticar usuários
-registrados via credenciais válidas.
-1. Credenciais corretas liberam
-a sessão.
-2. Credenciais inválidas alertam
-o usuário.
+## 2.4. Requisitos Não Funcionais (RNF)
+*(A ser preenchido pela Vitória)*
 
-RF5 [Nome RF5] [Descrição detalhada] [Regras para considerar pronto]
+| ID | Categoria | Descrição da Restrição | Métrica / Forma de Teste |
+| :--- | :--- | :--- | :--- |
+| **RNF01** | Tecnologia / Backend | O sistema deve ser desenvolvido utilizando a linguagem Python e estruturado no padrão MVC. | Compatível com Python 3.12+. |
+| **RNF02** | Portabilidade | As dependências devem estar isoladas no manifesto de pacotes. | Instalação com comando padrão via `requirements.txt`. |
+| **RNF03** | [Categoria] | [Descrição] | [Métrica] |
 
-2.4. Requisitos Não Funcionais (RNF)
+---
 
-Especifique de 3 a 5 requisitos não funcionais aplicáveis ao projeto (tecnologia, interface, portabilidade ou boas práticas).
-ID Categoria Descrição da Restrição Métrica / Forma de Teste
+## 2.5. Matriz de Priorização MoSCOW
 
-RNF01 Tecnologia / Backend O sistema deve ser desenvolvido
-obrigatoriamente utilizando a linguagem
-Python Compatível com Python 3.12+.
+*   **Must Have:** [Preencher]
+*   **Should Have:** [Preencher]
+*   **Could Have:** [Preencher]
+*   **Won't Have:** [Preencher]
 
-RNF02 Portabilidade As dependências devem estar isoladas e
-descritas em arquivo de manifesto de
-pacotes.
-Instalação com comando padrão via requirements.txt.
+---
 
-RNF03 Usabilidade O sistema deve fornecer mensagens claras
-de sucesso ou erro para todas as ações do
-usuário.
-Feedback visual/textual imediato em todas as operações.
+## 2.6. Comprovação de Contribuições no Git
+*(A ser preenchido por Hyago e Maiara)*
 
-RNF04 Documentação O README.md deve conter instruções
-completas de instalação, configuração e
-Reproducibilidade do setup por terceiros sem
+Os prints de colaboração devem ser salvos na pasta `docs/`.
 
-ID Categoria Descrição da Restrição Métrica / Forma de Teste
-execução. erros.
-
-2.5. Matriz de Priorização MoSCoW
-
-Classifique os requisitos funcionais e não funcionais em suas respectivas categorias de
-prioridade para a primeira iteração do semestre:
-
-● Must Have (Indispensável para o MVP): [Listar IDs dos requisitos fundamentais, ex.:
-RF01, RF02, RNF01]
-● Should Have (Importante, alta prioridade): [Listar IDs dos requisitos de alto valor, ex.:
-RF03, RF05, RNF03]
-● Could Have (Desejável, se houver tempo hábil): [Listar IDs de melhorias secundárias,
-ex.: RF08, RNF04]
-● Won't Have (Fora do escopo desta entrega): [Listar IDs de funcionalidades
-descartadas/adiadas para versões futuras]
-
-2.6. Comprovação de Contribuições no Git
-
-Para garantir que todos os 5 integrantes colaboraram ativamente e utilizaram o versionamento
-de código, a equipe deve incluir nesta seção (ou anexar como imagem na pasta docs/ e exibir
-no README):
-
-1. Print do Painel de Contribuidores: Captura de tela da página do repositório em Insights
-> Contributors (ou Network), demonstrando o nome/login dos 5 integrantes com seus
-respectivos commits.
-
-2. Print do Histórico de Commits: Captura de tela da listagem de commits do branch
-principal (main), exibindo a mensagem descritiva e o autor de cada alteração.
-
-2.7. Documentação Complementar e Modelagem UML (Opcional)
-
-Espaço destinado a equipes que queiram adicionar os diagramas UML desenvolvidos em aula 
-(Casos de Uso, Classes e/ou Sequência). Imagens ou links para os arquivos dentro de docs/
-podem ser inseridos aqui para bonificação na avaliação.
-
-3. Rubrica de Avaliação da Atividade
-4. 
-Critério Descrição do Atendimento Peso
-Engenharia de
-Requisitos Definição clara de pelo menos 10 RFs com critérios de
-aceite testáveis e 3 a 5 RNFs consistentes. 35%
-Papéis Ágeis e
-Priorização
-Definição justificada de PO e SM e aplicação correta
-da matriz MoSCoW.
-25%
-Repositório e
-Estrutura Inicial
-Repositório bem estruturado com pastas Python,
-README completo e organização limpa.
-20%
-Colaboração Git
-(Prints)
-Comprovação de contribuição individual de todos os 5
-integrantes via histórico de commits.
-20%
-Bônus: Modelagem
-UML
-Inclusão coerente de diagramas de Casos de Uso,
-Classes ou Sequência na documentação.
-+ 10% (Extra)
-.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+![Histórico de Commits](./docs/historico_commits.png)
+![Contribuidores](./docs/contribuidores.png)
