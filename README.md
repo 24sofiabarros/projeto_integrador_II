@@ -82,7 +82,12 @@ O diagrama abaixo apresenta os principais casos de uso decorrentes dos requisito
 ## 2.6. Comprovação de Contribuições no Git
 *(A ser preenchido por Hyago e Maiara)*
 
-Os prints de colaboração devem ser salvos na pasta `docs/`.
+Os prints de colaboração comprovando o histórico de commits da equipe:
 
-![Histórico de Commits](./docs/historico_commits.png)
+### Histórico de Commits - Branch Principal
+![Histórico de Commits - Branch Principal](./docs/historico_commits_principal.jpg)
+
+### Histórico de Commits - Branch Scrum Master e Iniciais
+![Histórico de Commits - Branch Scrum Master](./docs/historico_commits_scrum_master.jpg)
+
 ![Contribuidores](./docs/contribuidores.png)
