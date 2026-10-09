@@ -1,6 +1,12 @@
-# Projeto Integrador (PI) - Sprint 1
+# Projeto Integrador II (SITRIB) - Sistema de Inteligência Tributária
 
-Este repositório contém a entrega da Sprint 1, abordando o Setup Ágil, Engenharia de Requisitos, Repositório Git e estruturação inicial em MVC..
+Repositório oficial de desenvolvimento do **SITRIB (Sistema de Inteligência Tributária da Prefeitura Municipal de Palmas-TO)**, desenvolvido pela equipe acadêmica no âmbito do Projeto Integrador II (UFT).
+
+---
+
+#  Fase 1: Sprint 1 - Setup Ágil e Engenharia de Requisitos
+
+Esta seção contém a documentação integral referente à entrega da Sprint 1, abordando o Setup Ágil, Engenharia de Requisitos, Repositório Git e estruturação inicial em MVC.
 
 ## 2.1. Identificação da Equipe e Links
 
@@ -91,3 +97,69 @@ Os prints de colaboração comprovando o histórico de commits da equipe:
 ![Histórico de Commits - Branch Scrum Master](./docs/historico_commits_scrum_master.jpg)
 
 ![Contribuidores](./docs/contribuidores.png)
+
+---
+
+#  Fase 2: Sprint 2 - Banco de Dados 3FN, Estruturas de Dados e Integração de APIs (Ciclo de Outubro/2026)
+
+Esta seção consolida a evolução do projeto no ciclo de outubro, materializando a arquitetura de persistência, algoritmos preditivos e especificação de conectividade segura.
+
+Para a documentação técnica consolidada completa, consulte o documento:
+ **[Resumo de Entregas e Consolidação Técnica - Sprint 2](./docs/resumo_entregas_sprint2.md)**
+
+---
+
+## 3.1. Entregáveis da Sprint 2
+
+###  Entregável E1: Modelagem e Banco de Dados Relacional (3FN)
+* **Diagrama Entidade-Relacionamento:** Disponível em [`docs/diagrama_er.png`](./docs/diagrama_er.png).
+* **Script DDL Normalizado (3FN):** [`src/banco/schema_3fn.sql`](./src/banco/schema_3fn.sql) com tabelas `contribuinte`, `imovel` e `divida_ativa` com restrições e integridade referencial.
+* **Carga de Dados Amostral:** [`src/banco/seed_piloto.sql`](./src/banco/seed_piloto.sql) contemplando bairros e setores reais de Palmas-TO.
+* **Consultas SQL de Validação:** [`src/banco/consultas_validacao.sql`](./src/banco/consultas_validacao.sql) demonstrando consolidação de dívidas e ranking por score.
+
+### 🧠 Entregável E2: Estruturas de Dados Avançadas e Algoritmos em Python
+* **Código Implementado:** [`src/estruturas/arquitetura_dados.py`](./src/estruturas/arquitetura_dados.py) contendo:
+  1. **Grafo de Relações Tributárias (`GrafoRelacoesTributarias`):** Busca em Largura (BFS) $O(V+E)$ para identificação de grupos econômicos.
+  2. **Heap Máximo de Cobrança Preditiva (`FilaCobrancaHeap`):** Priorização de títulos por score de recuperabilidade com $O(\log N)$ e filtro protetivo de isenção de IPTU Social.
+  3. **Tabela Hash de Indexação (`TabelaHashInscricoes`):** Busca e inserção em $O(1)$ médio com resolução de colisões por encadeamento.
+* **Análise Assintótica Big-O:** [`docs/arquitetura_dados.md`](./docs/arquitetura_dados.md).
+
+### 🔌 Entregável E3: Integração de APIs Externas e Mecanismos de Autenticação
+* **Documento Técnico:** [`docs/integracao_api.md`](./docs/integracao_api.md)
+  * Mapeamento dos endpoints municipais (`/arrecadacao/iptu`, `/arrecadacao/iss`, `/divida-ativa/devedores`).
+  * Protocolos de tráfego seguro HTTPS (TLS 1.3) e conformidade LGPD.
+  * **Mecanismo de Autenticação (Bearer Token):** Detalhamento arquitetural do fluxo em 4 etapas, gestão de segredos via `.env`/`.gitignore`, proteção contra hardcoding e tratamento de falhas HTTP 401 e 403.
+  * Exemplos conceituais e operacionais em cURL e script Python.
+
+---
+
+## 3.2. Como Executar os Scripts da Sprint 2
+
+### 1. Testar as Estruturas de Dados em Python:
+```bash
+python src/estruturas/arquitetura_dados.py
+```
+
+### 2. Executar os Scripts do Banco de Dados PostgreSQL:
+```bash
+# 1. Criação das tabelas em 3FN
+psql -U postgres -d sitrib -f src/banco/schema_3fn.sql
+
+# 2. Carga dos dados de teste piloto
+psql -U postgres -d sitrib -f src/banco/seed_piloto.sql
+
+# 3. Execução das queries de validação
+psql -U postgres -d sitrib -f src/banco/consultas_validacao.sql
+```
+
+---
+
+## 3.3. Rastreabilidade com os Requisitos
+
+| Requisito | Entregável na Sprint 2 | Arquivo Principal |
+| :--- | :--- | :--- |
+| **RF02** | Ingestão e Integração de APIs com Bearer Token | [`docs/integracao_api.md`](./docs/integracao_api.md) |
+| **RF03 / RF04** | Cruzamento de Dados e Grupos Econômicos | [`src/estruturas/arquitetura_dados.py`](./src/estruturas/arquitetura_dados.py) (Grafo) |
+| **RF05 / RF06** | Consulta Cadastral e Indexação Rápida | [`src/estruturas/arquitetura_dados.py`](./src/estruturas/arquitetura_dados.py) (Hash $O(1)$) |
+| **RF07** | Fila Preditiva de Cobrança com Isenção Social | [`src/estruturas/arquitetura_dados.py`](./src/estruturas/arquitetura_dados.py) (Heap) |
+| **Persistência Geral** | Modelagem 3FN e Consultas de Dívida Ativa | [`src/banco/schema_3fn.sql`](./src/banco/schema_3fn.sql) |
