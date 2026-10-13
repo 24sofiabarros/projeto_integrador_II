@@ -163,3 +163,17 @@ psql -U postgres -d sitrib -f src/banco/consultas_validacao.sql
 | **RF05 / RF06** | Consulta Cadastral e Indexação Rápida | [`src/estruturas/arquitetura_dados.py`](./src/estruturas/arquitetura_dados.py) (Hash $O(1)$) |
 | **RF07** | Fila Preditiva de Cobrança com Isenção Social | [`src/estruturas/arquitetura_dados.py`](./src/estruturas/arquitetura_dados.py) (Heap) |
 | **Persistência Geral** | Modelagem 3FN e Consultas de Dívida Ativa | [`src/banco/schema_3fn.sql`](./src/banco/schema_3fn.sql) |
+
+---
+
+## 3.4. Comprovação de Contribuições no Git - Sprint 2
+*(Atualizado por Maiara)*
+
+Os prints de colaboração comprovando o histórico de commits da equipe no ciclo da Sprint 2:
+
+### Histórico de Commits - Branch sprint-2
+![Histórico de Commits - Branch sprint-2](./docs/historico_commits_sprint2.png)
+
+### Histórico de Commits - Branch Principal (main)
+![Histórico de Commits - Branch Principal Sprint 2](./docs/historico_commits_principal_sprint2.png)
+

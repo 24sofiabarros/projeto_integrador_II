@@ -100,3 +100,8 @@ A documentação em `docs/integracao_api.md` estabelece a base para consumo segu
   * Acompanhamento e validação de artefatos de engenharia de software e diagramas.
 * **Ludmylla Teixeira & Maiara Ktidi Xerente:**
   * Revisão da estruturação MVC, consolidação das branches de entrega e integração dos entregáveis para Pull Request unificado na branch principal.
+
+### Comprovação Visual dos Commits (Prints de Colaboração)
+* **Histórico na branch `sprint-2`:** [`docs/historico_commits_sprint2.png`](./historico_commits_sprint2.png)
+* **Histórico na branch principal (`main`):** [`docs/historico_commits_principal_sprint2.png`](./historico_commits_principal_sprint2.png)
+
