@@ -57,3 +57,7 @@ htmlcov/
 *.log
 *.sqlite3
 *.db
+
+# Data persistence (LGPD and raw data)
+data/bruto/*
+!data/bruto/.gitkeep
