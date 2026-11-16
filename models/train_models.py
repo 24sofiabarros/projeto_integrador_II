@@ -18,6 +18,7 @@ import joblib
 from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
+from xgboost import XGBClassifier
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
@@ -95,15 +96,23 @@ def train_and_export_models():
     # Modelo Final Principal: Random Forest
     pipe_rf = Pipeline([
         ("preprocessor", preprocessor),
-        ("classifier", RandomForestClassifier(n_estimators=150, max_depth=10, min_samples_split=5, random_state=42, n_jobs=-1))
+        ("classifier", RandomForestClassifier(n_estimators=150, max_depth=10, min_samples_split=5, random_state=42, n_jobs=1))
     ])
     pipe_rf.fit(X_train, y_train)
+
+    # Modelo Principal 2: XGBoost (Gradient Boosting)
+    pipe_xgb = Pipeline([
+        ("preprocessor", preprocessor),
+        ("classifier", XGBClassifier(n_estimators=120, max_depth=5, learning_rate=0.08, random_state=42, eval_metric="logloss"))
+    ])
+    pipe_xgb.fit(X_train, y_train)
 
     # 6. Avaliação no Conjunto de Teste Temporal (E2 & E3)
     models_dict = {
         "Regressão Logística (Baseline)": pipe_lr,
         "Árvore de Decisão (Baseline)": pipe_dt,
-        "Random Forest (Modelo Final Campeão)": pipe_rf
+        "Random Forest (Modelo Final Campeão)": pipe_rf,
+        "XGBoost (Gradient Boosting)": pipe_xgb
     }
 
     metrics_report = {}
@@ -127,11 +136,23 @@ def train_and_export_models():
     rf_path = os.path.join(models_dir, "random_forest_debt_model.joblib")
     lr_path = os.path.join(models_dir, "logistic_regression_baseline.joblib")
     dt_path = os.path.join(models_dir, "decision_tree_baseline.joblib")
+    xgb_path = os.path.join(models_dir, "xgboost_debt_model.joblib")
     metrics_path = os.path.join(models_dir, "model_metrics.json")
 
-    joblib.dump(pipe_rf, rf_path)
-    joblib.dump(pipe_lr, lr_path)
-    joblib.dump(pipe_dt, dt_path)
+    def _safe_dump(model_obj, path):
+        tmp_path = path + ".tmp"
+        joblib.dump(model_obj, tmp_path, compress=3)
+        if os.path.exists(path):
+            try:
+                os.remove(path)
+            except Exception:
+                pass
+        os.replace(tmp_path, path)
+
+    _safe_dump(pipe_rf, rf_path)
+    _safe_dump(pipe_lr, lr_path)
+    _safe_dump(pipe_dt, dt_path)
+    _safe_dump(pipe_xgb, xgb_path)
 
     with open(metrics_path, "w", encoding="utf-8") as f:
         json.dump(metrics_report, f, indent=4, ensure_ascii=False)

@@ -177,3 +177,87 @@ Os prints de colaboração comprovando o histórico de commits da equipe no cicl
 ### Histórico de Commits - Branch Principal (main)
 ![Histórico de Commits - Branch Principal Sprint 2](./docs/historico_commits_principal_sprint2.png)
 
+
+
+---
+
+# 🚀 Fase 4: Sprint 4 — Modelo de IA, Scoring de Recuperabilidade e Painel MVP
+
+Esta seção documenta a entrega integral da **Sprint 4 (29/10/2026 a 11/11/2026)** no âmbito do Módulo 6 — Introdução à Inteligência Artificial (Prof. Dr. David Nadler Prata), consolidando os modelos de IA, o sistema de scoring de recuperabilidade da dívida ativa e o MVP interativo para a SEFIN Palmas-TO.
+
+## 4.1. Divisão de Responsabilidades da Equipe (Sprint 4)
+
+| Integrante | Foco na Sprint 4 | Atividades Executadas e Entregues |
+|---|---|---|
+| **Sofia Barros** | Split Temporal, Baselines e Classificação (E1, E2) | Divisão temporal sem vazamento de dados, baselines (Regressão Logística e Árvore de Decisão), treinamento e tunagem dos modelos principais (Random Forest e XGBoost) e exportação para `/models`. |
+| **Hyag Queiroz** | Scoring de Recuperabilidade, Pipeline e Gestão Git (E2, E3) | Desenvolvimento do modelo complementar de scoring de recuperabilidade (faixas Alta, Média e Baixa), integração do carregamento dos modelos serializados ao backend do painel e gerenciamento de branches, commits e Pull Requests no Git. |
+| **Vitória Alves** | Interface do MVP em Streamlit (E4) | Construção da interface interativa em Streamlit conectada ao pipeline real, implementando o ranking de devedores por score, o mapa de calor de inadimplência e o módulo de projeção de arrecadação. |
+| **Maiara Xerente** | Métricas, Subgrupos e Análise Técnica (E2, E3) | Extração e interpretação das métricas completas (acurácia, precisão, recall, F1 e matriz de confusão), recortes por faixa de renda e região (base para equidade na Sprint 5) e redação das justificativas LGPD. |
+| **Ludmylla Teixeira** | Consolidação, Auditoria e Entrega (E3, Fechamento) | Estruturação e revisão da trilha narrativa completa no Jupyter Notebook (EDA → pré-processamento → treino → avaliação), auditoria do diário de bordo e revisão de commits para entrega. |
+
+---
+
+## 4.2. Arquitetura Técnica e Módulos Entregues pelo Integrante Hyag
+
+### EIXO 1 — Modelo Complementar de Scoring de Recuperabilidade (`src/scoring/recuperabilidade.py`)
+- **Diferenciação Semântica Rigorosa:**
+  - $P(\text{inadimplência})$: Probabilidade predita de persistência no não pagamento da dívida.
+  - $P(\text{recuperação}) = 1 - P(\text{inadimplência})$: Propensão estatística de quitação estimada pelo comitê de modelos preditivos.
+  - **Score de Recuperabilidade ($S \in [0, 100]$):** Função linear ponderada composta:
+    $$S = 0.50 \times (100 \times P_{\text{recup}}) + 0.50 \times I_{\text{material}}$$
+    Onde $I_{\text{material}}$ agrega:
+    - *Antiguidade ($F_{\text{tempo}}$):* Decaimento temporal contra risco de prescrição (Art. 174 do CTN).
+    - *Faixa de Valor ($F_{\text{valor}}$):* Liquidez e relação custo-benefício da cobrança administrativa.
+    - *Garantias e Cooperatividade ($F_{\text{garantia}}$):* Bens penhoráveis, contatos cadastrais válidos e adesão prévia a parcelamentos.
+    - *Capacidade Contributiva Setorial ($F_{\text{renda}}$):* Renda média domiciliar por macro-região de Palmas (Censo IBGE).
+- **Faixas Operacionais e Canais Sugeridos:**
+  - **Alta Recuperabilidade ($S \ge 68.0$):** Notificação digital imediata (WhatsApp institucional, DDA bancário, e-mail).
+  - **Média Recuperabilidade ($42.0 \le S < 68.0$):** Notificação postal, protesto extrajudicial de CDA e oferta do Programa REFIS Palmas.
+  - **Baixa Recuperabilidade ($S < 42.0$):** Execução fiscal seletiva, averiguação patrimonial e investigação de insolvência.
+- **Proteção Social Obrigatória (IPTU Social):** Regra inegociável de bloqueio de cobrança agressiva e redirecionamento para atendimento social a contribuintes vulneráveis.
+- **Interpretabilidade Local (Feature Attribution):** Decomposição explicável da contribuição de cada subfator no score final.
+
+### EIXO 2 — Pipeline de Carregamento e Inferência (`src/pipeline/carregamento_inferencia.py`)
+- **GerenciadorModelos:** Localização em `/models`, verificação de integridade criptográfica via hash SHA-256 e carregamento com cache em memória singleton.
+- **PipelineInferencia:** Validação de schema, tipagem estrita, imputação defensiva para campos ausentes e inferência de probabilidades.
+- **Integração com Heap Máximo:** Conexão direta com a classe `FilaCobrancaHeap` (`src/estruturas/arquitetura_dados.py`), ordenando os devedores em $O(\log n)$ e expurgando automaticamente beneficiários do IPTU Social.
+
+### EIXO 3 — Integração com o Painel MVP Streamlit (`app.py`)
+- O backend do painel conecta-se diretamente ao pipeline e executa a inferência em lote dinamicamente.
+- Incorporação da opção de ordenação por **Fila Priorizada Heap Máximo SEFIN (O(log n))**.
+- Adição do **Simulador Individual de Contribuinte / Débito** com cálculo em tempo real e gráfico de interpretabilidade em barras.
+- Documentação formal na aba *Metodologia & Auditoria Algorítmica*.
+
+---
+
+## 4.3. Como Executar os Módulos da Sprint 4
+
+### 1. Instalação do Ambiente Virtual e Dependências:
+```bash
+# Criação do ambiente virtual
+python -m venv .venv
+
+# Ativação do ambiente (Windows PowerShell)
+.\.venv\Scripts\Activate.ps1
+
+# Instalação dos pacotes requeridos
+pip install -r requirements.txt
+```
+
+### 2. Executar a Suíte de Testes Automatizados (36 Testes - 100% Aprovados):
+```bash
+python -m unittest discover tests
+```
+*Cobertura: `test_coleta.py` (11 testes), `test_scoring.py` (11 testes), `test_pipeline_inferencia.py` (10 testes) e `test_integracao_mvp.py` (4 testes).*
+
+### 3. Executar o Pipeline CLI do SITRIB:
+```bash
+python src/main.py --modelo random_forest_debt_model.joblib --dados data/divida_ativa_palmas.csv
+```
+
+### 4. Iniciar o Painel MVP Interativo em Streamlit:
+```bash
+streamlit run app.py
+# ou alternativamente:
+python src/main.py --dashboard
+```

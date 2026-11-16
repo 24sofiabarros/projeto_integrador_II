@@ -20,6 +20,15 @@ import plotly.express as px
 import plotly.graph_objects as go
 import pydeck as pdk
 
+from src.pipeline.carregamento_inferencia import (
+    get_pipeline_inferencia_singleton,
+    GerenciadorModelos,
+)
+from src.scoring.recuperabilidade import (
+    ScoringRecuperabilidade,
+    FaixaRecuperabilidade,
+)
+
 # ======================================================================================
 # 1. CONFIGURAÇÃO INICIAL E ESTILIZAÇÃO (LAYOUT WIDE & CSS CORPORATIVO SEFIN)
 # ======================================================================================
@@ -242,6 +251,17 @@ def load_metrics_audit():
     return None
 
 
+
+@st.cache_data(show_spinner="Executando pipeline de inferência preditiva e scoring...")
+def run_pipeline_inference(df_input: pd.DataFrame, model_name: str):
+    """
+    Executa o pipeline de inferência e scoring com cache do Streamlit,
+    garantindo velocidade e rastreabilidade nas interações.
+    """
+    pipeline = get_pipeline_inferencia_singleton()
+    df_result, metadata = pipeline.executar_inferencia(df_input, model_name)
+    return df_result, metadata
+
 # ======================================================================================
 # 3. BARRA LATERAL (SIDEBAR): GESTÃO DE ARTEFATOS, MODELOS E FILTROS TRIBUTÁRIOS
 # ======================================================================================
@@ -318,6 +338,14 @@ else:
 # Garantia de integridade das colunas
 if "valor_total_divida" not in df_raw.columns and "valor_principal" in df_raw.columns:
     df_raw["valor_total_divida"] = df_raw["valor_principal"] + df_raw.get("juros_multas", 0)
+
+# Integração do Pipeline de Inferência e Scoring (Hyag - Sprint 4)
+inference_meta = None
+if active_model_name and active_model_name != "Nenhum modelo ativo":
+    try:
+        df_raw, inference_meta = run_pipeline_inference(df_raw, active_model_name)
+    except Exception as e:
+        st.sidebar.warning(f"Inferência automática em contingência: {e}")
 
 # ======================================================================================
 # FILTROS GLOBAIS DE PERFIL TRIBUTÁRIO (SIDEBAR)
@@ -559,6 +587,7 @@ with tab_ranking:
             "Critério de Ordenação:",
             options=[
                 "Score de Recuperabilidade (Decrescente)",
+                "Fila Priorizada Heap Máximo SEFIN (O(log n))",
                 "Valor Total da Dívida (Decrescente)",
                 "Menor Tempo em Dívida (Mais Recente)",
                 "Maior Tempo em Dívida (Mais Antigo)"
@@ -581,7 +610,14 @@ with tab_ranking:
         df_rank = df_rank[mask]
 
     # Ordenação
-    if ordem_ranking == "Score de Recuperabilidade (Decrescente)":
+    if ordem_ranking == "Fila Priorizada Heap Máximo SEFIN (O(log n))":
+        pipeline_heap = get_pipeline_inferencia_singleton()
+        ranking_heap = pipeline_heap.priorizar_fila_cobranca(df_rank)
+        map_ordem = {item["id_divida"]: item["posicao"] for item in ranking_heap}
+        id_col = "id_devedor" if "id_devedor" in df_rank.columns else "numero_cda"
+        df_rank["posicao_heap"] = df_rank[id_col].map(map_ordem)
+        df_rank = df_rank.dropna(subset=["posicao_heap"]).sort_values(by="posicao_heap")
+    elif ordem_ranking == "Score de Recuperabilidade (Decrescente)":
         df_rank = df_rank.sort_values(by="score_recuperabilidade", ascending=False)
     elif ordem_ranking == "Valor Total da Dívida (Decrescente)":
         df_rank = df_rank.sort_values(by="valor_total_divida", ascending=False)
@@ -686,8 +722,87 @@ with tab_ranking:
             st.markdown(f"- Bens penhoráveis identificados: **{row_dev.get('possui_bens', 'Não informado')}**")
             st.markdown(f"- Cadastro de contato atualizado: **{row_dev.get('contato_atualizado', 'Sim')}**")
             st.markdown(f"- Ajuizamento de execução fiscal: **{row_dev.get('execucao_ajuizada', 'Não')}**")
+
+            # Interpretabilidade Local: Decomposição de Fatores (Hyag - Sprint 4)
+            try:
+                scoring_eng = get_pipeline_inferencia_singleton().scoring
+                calc_exp = scoring_eng.calcular_score_individual(
+                    probabilidade_recuperacao=float(row_dev.get("probabilidade_recuperacao", row_dev["score_recuperabilidade"]/100.0)),
+                    tempo_inscricao_meses=float(row_dev.get("tempo_inscricao_meses", 24)),
+                    valor_total_divida=float(row_dev["valor_total_divida"]),
+                    possui_bens=str(row_dev.get("possui_bens", "Não")),
+                    contato_atualizado=str(row_dev.get("contato_atualizado", "Sim")),
+                    historico_parcelamentos=int(row_dev.get("historico_parcelamentos", 0)),
+                    execucao_ajuizada=str(row_dev.get("execucao_ajuizada", "Não")),
+                    faixa_renda=str(row_dev.get("faixa_renda", "2 a 5 SM")),
+                    isencao_iptu_social=bool(row_dev.get("isencao_iptu_social", False))
+                )
+                df_fat = pd.DataFrame([
+                    {"Fator": "Modelo IA (50%)", "Pontos": calc_exp.fatores_contribuicao.get("contribuicao_modelo_ia", 0)},
+                    {"Fator": "Antiguidade", "Pontos": calc_exp.fatores_contribuicao.get("contribuicao_antiguidade", 0)},
+                    {"Fator": "Valor Dívida", "Pontos": calc_exp.fatores_contribuicao.get("contribuicao_valor_divida", 0)},
+                    {"Fator": "Garantias/Contato", "Pontos": calc_exp.fatores_contribuicao.get("contribuicao_garantias_contato", 0)},
+                    {"Fator": "Renda Setorial", "Pontos": calc_exp.fatores_contribuicao.get("contribuicao_capacidade_renda", 0)},
+                ])
+                fig_fat = px.bar(
+                    df_fat, x="Pontos", y="Fator", orientation="h",
+                    title="<b>Interpretabilidade: Contribuição dos Fatores</b>",
+                    color="Pontos", color_continuous_scale="Blues"
+                )
+                fig_fat.update_layout(height=180, margin=dict(l=10, r=10, t=25, b=10), showlegend=False)
+                st.plotly_chart(fig_fat, use_container_width=True)
+            except Exception:
+                pass
     else:
         st.info("Nenhum devedor encontrado com os critérios de filtro selecionados.")
+
+    # SIMULADOR INDIVIDUAL DE CONTRIBUINTE / DÍVIDA ATIVA (INTERPRETABILIDADE EM TEMPO REAL)
+    st.markdown("---")
+    with st.expander("🧪 Simulador Individual de Contribuinte / Dívida Ativa (Interpretabilidade em Tempo Real)", expanded=False):
+        st.caption("Simule o cálculo de score e a recomendação operacional para um contribuinte específico preenchendo os atributos fiscais:")
+        sim_col1, sim_col2, sim_col3 = st.columns(3)
+        with sim_col1:
+            sim_tributo = st.selectbox("Tributo:", ["IPTU", "ISSQN", "ITBI", "Taxas de Licenciamento"], key="sim_trib")
+            sim_tempo = st.slider("Idade da Dívida (Meses em Atraso):", 1, 96, 18, key="sim_tmp")
+            sim_renda = st.selectbox("Faixa de Renda:", ["Até 2 SM", "2 a 5 SM", "5 a 10 SM", "Acima de 10 SM"], index=1, key="sim_rnd")
+        with sim_col2:
+            sim_valor = st.number_input("Valor Total da Dívida (R$):", min_value=100.0, max_value=500000.0, value=4800.0, step=500.0, key="sim_vlr")
+            sim_bens = st.radio("Possui Bens Penhoráveis?", ["Sim", "Não"], horizontal=True, key="sim_bns")
+            sim_contato = st.radio("Contato Cadastral Atualizado?", ["Sim", "Não"], horizontal=True, key="sim_cnt")
+        with sim_col3:
+            sim_parc = st.slider("Histórico de Parcelamentos Prévios:", 0, 5, 1, key="sim_prc")
+            sim_ajz = st.radio("Execução Fiscal Já Ajuizada?", ["Não", "Sim"], horizontal=True, key="sim_ajz")
+            sim_social = st.checkbox("Beneficiário do IPTU Social (Vulnerável)", value=False, key="sim_soc")
+
+        if st.button("🚀 Calcular Score com Explicabilidade", type="primary", use_container_width=True):
+            pipeline_ind = get_pipeline_inferencia_singleton()
+            df_sim_ind = pd.DataFrame([{
+                "tributo": sim_tributo,
+                "tipo_pessoa": "Pessoa Física (PF)",
+                "tempo_inscricao_meses": sim_tempo,
+                "valor_principal": sim_valor * 0.8,
+                "juros_multas": sim_valor * 0.2,
+                "valor_total_divida": sim_valor,
+                "quantidade_debitos": 1,
+                "historico_parcelamentos": sim_parc,
+                "execucao_ajuizada": sim_ajz,
+                "possui_bens": sim_bens,
+                "contato_atualizado": sim_contato,
+                "faixa_renda": sim_renda,
+                "regiao": "Plano Diretor Sul",
+                "isencao_iptu_social": sim_social
+            }])
+            df_out_sim, _ = pipeline_ind.executar_inferencia(df_sim_ind, active_model_name)
+            res_row = df_out_sim.iloc[0]
+
+            st.divider()
+            r_c1, r_c2, r_c3, r_c4 = st.columns(4)
+            r_c1.metric("Score de Recuperabilidade", f"{res_row['score_recuperabilidade']:.1f} / 100")
+            r_c2.metric("Faixa de Risco", res_row["faixa_recuperabilidade"])
+            r_c3.metric("Prob. de Recuperação P(recup)", f"{res_row['probabilidade_recuperacao']*100:.1f}%")
+            r_c4.metric("Prob. Inadimplência P(inad)", f"{res_row['probabilidade_inadimplencia']*100:.1f}%")
+
+            st.info(f"👉 **Ação Operacional Recomendada SEFIN:** {res_row['canal_recomendado']}")
 
 
 # ======================================================================================
@@ -1103,6 +1218,26 @@ with tab_governanca:
                     st.plotly_chart(fig_cm, use_container_width=True)
     else:
         st.warning("Métricas de auditoria não encontradas em `models/model_metrics.json`. Execute `models/train_models.py` para gerar.")
+
+    # 2.1 Metodologia do Scoring de Recuperabilidade & Pipeline (Eixos 1 e 2 - Hyag)
+    st.markdown("#### 🎯 2.1 Metodologia do Score de Recuperabilidade & Pipeline de Inferência (Eixos 1 e 2)")
+    st.markdown(
+        r"""
+        O sistema adota um modelo complementar de **Scoring de Recuperabilidade** matematicamente formulado 
+        para converter predições estatísticas e atributos materiais da dívida ativa em faixas operacionais 
+        compreensíveis para os analistas tributários da SEFIN Palmas:
+
+        - **Diferenciação Semântica Rigorosa:**
+          - $P(\text{inadimplência})$: Probabilidade de persistência no não pagamento do tributo.
+          - $P(\text{recuperação}) = 1 - P(\text{inadimplência})$: Propensão estatística de quitação estimada pelo comitê de árvores/modelos preditivos.
+          - **Score de Recuperabilidade ($S \in [0, 100]$):** Indicador composto ponderando propensão estatística ($50\%$) e atributos materiais ($50\%$) — antiguidade (Art. 174 CTN), faixa de valor, garantias/bens penhoráveis e renda média setorial (Censo IBGE).
+        - **Faixas Operacionais de Priorização Fazendária:**
+          - **Alta Recuperabilidade ($S \ge 68.0$):** Canal digital de baixo custo (WhatsApp/E-mail/DDA); alta resposta em até 90 dias.
+          - **Média Recuperabilidade ($42.0 \le S < 68.0$):** Notificação postal, protesto cartorário e incentivo de regularização (REFIS Palmas).
+          - **Baixa Recuperabilidade ($S < 42.0$):** Débitos antigos, litigiosos ou sem patrimônio localizado; triagem jurídica e averiguação patrimonial.
+        - **Proteção Social Obrigatória (IPTU Social):** Contribuintes em vulnerabilidade socioeconômica extrema recebem bloqueio automático de cobrança coercitiva e encaminhamento social.
+        """
+    )
 
     # 3. Conformidade LGPD e Auditoria de Equidade (Fairness)
     st.markdown("#### 🔒 3. Conformidade Ética, LGPD e Minimização de Dados")
