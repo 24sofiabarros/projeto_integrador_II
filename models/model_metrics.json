@@ -49,5 +49,22 @@
                 286
             ]
         ]
+    },
+    "XGBoost (Gradient Boosting)": {
+        "acuracia": 0.8942,
+        "precisao": 0.9714,
+        "recall": 0.9134,
+        "f1_score": 0.9415,
+        "roc_auc": 0.8948,
+        "matriz_confusao": [
+            [
+                15,
+                9
+            ],
+            [
+                29,
+                306
+            ]
+        ]
     }
 }
