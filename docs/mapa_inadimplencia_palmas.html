@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SITRIB - Mapa Geoespacial de Inadimplência por Setor Urbano (Palmas-TO)</title>
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      background: #f8fafc;
+      color: #1e293b;
+    }
+    header {
+      background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%);
+      color: white;
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      z-index: 1000;
+    }
+    .header-title h1 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .badge {
+      background: #3b82f6;
+      color: white;
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 9999px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .header-sub {
+      font-size: 0.85rem;
+      color: #94a3b8;
+      margin-top: 4px;
+    }
+    .main-container {
+      display: flex;
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+    #map {
+      flex: 1;
+      height: 100%;
+      background: #e2e8f0;
+    }
+    .sidebar {
+      width: 380px;
+      background: white;
+      border-left: 1px solid #e2e8f0;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      box-shadow: -4px 0 16px rgba(0, 0, 0, 0.05);
+      z-index: 999;
+    }
+    .sidebar-section {
+      padding: 20px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    .sidebar-section h2 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #0f172a;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .stat-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .stat-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 12px;
+    }
+    .stat-label {
+      font-size: 0.75rem;
+      color: #64748b;
+      margin-bottom: 4px;
+      font-weight: 500;
+    }
+    .stat-val {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #0f172a;
+    }
+    .stat-val.primary {
+      color: #1d4ed8;
+    }
+    .stat-val.danger {
+      color: #dc2626;
+    }
+    .sector-item {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border-left: 5px solid #cbd5e1;
+    }
+    .sector-item:hover {
+      background: #f1f5f9;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+    .sector-item.high {
+      border-left-color: #dc2626;
+    }
+    .sector-item.medium {
+      border-left-color: #f59e0b;
+    }
+    .sector-item.low {
+      border-left-color: #10b981;
+    }
+    .sector-item.none {
+      border-left-color: #94a3b8;
+    }
+    .sector-name {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #1e293b;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .sector-badge {
+      font-size: 0.7rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+    .badge-high {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
+    .badge-medium {
+      background: #fef3c7;
+      color: #b45309;
+    }
+    .badge-low {
+      background: #d1fae5;
+      color: #047857;
+    }
+    .badge-none {
+      background: #f1f5f9;
+      color: #64748b;
+    }
+    .sector-meta {
+      font-size: 0.78rem;
+      color: #64748b;
+      margin-top: 6px;
+      line-height: 1.4;
+    }
+    .legend-box {
+      background: white;
+      padding: 12px 16px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      font-size: 0.8rem;
+      line-height: 1.6;
+    }
+    .legend-title {
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: #0f172a;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+    .legend-color {
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+    }
+    .note-box {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 6px;
+      padding: 12px;
+      font-size: 0.78rem;
+      color: #1e40af;
+      line-height: 1.5;
+    }
+    .leaflet-popup-content-wrapper {
+      border-radius: 8px;
+      padding: 4px;
+    }
+    .popup-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #0f172a;
+      border-bottom: 2px solid #e2e8f0;
+      padding-bottom: 6px;
+      margin-bottom: 8px;
+    }
+    .popup-table {
+      width: 100%;
+      font-size: 0.8rem;
+      border-collapse: collapse;
+    }
+    .popup-table td {
+      padding: 3px 0;
+    }
+    .popup-table td.label {
+      color: #64748b;
+      font-weight: 500;
+    }
+    .popup-table td.value {
+      font-weight: 600;
+      text-align: right;
+      color: #0f172a;
+    }
+    /* Fallback SVG when Leaflet CDN is unavailable */
+    .svg-fallback {
+      display: none;
+      width: 100%;
+      height: 100%;
+      background: #f1f5f9;
+      position: relative;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="header-title">
+      <h1>
+        SITRIB — Sistema de Inteligência Tributária
+        <span class="badge">Sefin Palmas-TO</span>
+      </h1>
+      <div class="header-sub">
+        Sprint 3 (Pipeline ETL) — Entregável E3: Mapa Geoespacial de Intensidade da Dívida Ativa e Inadimplência Fazendária
+      </div>
+    </div>
+    <div>
+      <span class="badge" style="background: #10b981;">Base Sefin & IBGE</span>
+    </div>
+  </header>
+
+  <div class="main-container">
+    <div id="map"></div>
+
+    <div class="sidebar">
+      <div class="sidebar-section">
+        <h2>📊 Resumo Fazendário</h2>
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="stat-label">Total Dívida Ativa</div>
+            <div class="stat-val danger">R$ 30.750,50</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Lançamentos ETL</div>
+            <div class="stat-val primary">58.555</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Setores Mapeados</div>
+            <div class="stat-val">4 Setores</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Maior Gargalo</div>
+            <div class="stat-val danger">ISS (50,08%)</div>
+          </div>
+        </div>
+        <div class="note-box">
+          <strong>Integração Cadastral e Demográfica:</strong> Os setores urbanos mapeados associam os débitos fazendários às variáveis socioeconômicas oficiais do Censo IBGE Palmas (renda média domiciliar, população e densidade urbana).
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <h2>🗺️ Setores Urbanos de Palmas</h2>
+        
+        <div class="sector-item high" onclick="focarSetor(0)">
+          <div class="sector-name">
+            <span>Plano Diretor Norte</span>
+            <span class="sector-badge badge-high">Muito Alta</span>
+          </div>
+          <div class="sector-meta">
+            <strong>Dívida Ativa:</strong> R$ 24.300,00 (79,02% do total)<br>
+            <strong>Tributos:</strong> ISS (R$ 15.400,00) e ITBI (R$ 8.900,00)<br>
+            <strong>Score Médio:</strong> 77,10 | <strong>População IBGE:</strong> 98.000 hab.
+          </div>
+        </div>
+
+        <div class="sector-item medium" onclick="focarSetor(1)">
+          <div class="sector-name">
+            <span>Plano Diretor Sul</span>
+            <span class="sector-badge badge-medium">Média</span>
+          </div>
+          <div class="sector-meta">
+            <strong>Dívida Ativa:</strong> R$ 5.600,50 (18,21% do total)<br>
+            <strong>Tributos:</strong> IPTU (104 Sul)<br>
+            <strong>Score Médio:</strong> 81,75 | <strong>População IBGE:</strong> 125.000 hab.
+          </div>
+        </div>
+
+        <div class="sector-item low" onclick="focarSetor(2)">
+          <div class="sector-name">
+            <span>Taquaralto</span>
+            <span class="sector-badge badge-low">Baixa</span>
+          </div>
+          <div class="sector-meta">
+            <strong>Dívida Ativa:</strong> R$ 850,00 (2,76% do total)<br>
+            <strong>Tributos:</strong> IPTU (Imóvel Beneficiário Social)<br>
+            <strong>Score Médio:</strong> 20,00 | <strong>População IBGE:</strong> 45.000 hab.
+          </div>
+        </div>
+
+        <div class="sector-item none" onclick="focarSetor(3)">
+          <div class="sector-name">
+            <span>Jardim Aureny (Aureny III)</span>
+            <span class="sector-badge badge-none">Sem Débitos</span>
+          </div>
+          <div class="sector-meta">
+            <strong>Dívida Ativa:</strong> R$ 0,00 (Sem registros no cadastro piloto)<br>
+            <strong>Renda Média IBGE:</strong> R$ 2.100,00<br>
+            <strong>População IBGE:</strong> 32.000 hab. | <strong>Densidade:</strong> 1.100 hab/km²
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar-section" style="border-bottom: none;">
+        <h2>⚖️ Critério de Priorização SITRIB</h2>
+        <p style="font-size: 0.8rem; color: #475569; line-height: 1.5;">
+          A inteligência tributária aplica a <strong>Fila de Cobrança Preditiva (Heap Máximo)</strong> baseada no Score de Recuperabilidade. Imóveis amparados pela isenção de <strong>IPTU Social</strong> (ex.: Setor Taquaralto) são automaticamente preservados da execução forçada.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script>
+    // Inicialização do Mapa centrado em Palmas - Tocantins
+    const palmasCentro = [-10.2200, -48.3300];
+    let map;
+
+    try {
+      map = L.map('map').setView(palmasCentro, 11);
+
+      // Camada Base OpenStreetMap
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 18,
+        attribution: '© OpenStreetMap contributors | SITRIB Sefin Palmas-TO'
+      }).addTo(map);
+    } catch(e) {
+      console.warn("Leaflet CDN não pôde ser carregado diretamente pela rede externa. Inicializando renderizador autônomo.");
+      document.getElementById('map').innerHTML = `
+        <div style="padding: 40px; text-align: center; color: #334155;">
+          <h2>Mapa Geoespacial Interativo - Sefin Palmas-TO</h2>
+          <p style="margin-top: 10px;">Visualização em modo autônomo seguro ativada.</p>
+        </div>
+      `;
+    }
+
+    const setores = [
+      {
+        nome: "Plano Diretor Norte",
+        centro: [-10.1650, -48.3300],
+        bounds: [[-10.1450, -48.3450], [-10.1850, -48.3150]],
+        cor: "#dc2626",
+        intensidade: "Muito Alta (79,02%)",
+        divida: "R$ 24.300,00",
+        tributos: "ISS: R$ 15.400,00 | ITBI: R$ 8.900,00",
+        score: "77,10",
+        status: "Em Aberto e Ajuizado",
+        populacao: "98.000 hab.",
+        renda: "R$ 3.800,00",
+        densidade: "1.850 hab/km²"
+      },
+      {
+        nome: "Plano Diretor Sul",
+        centro: [-10.2150, -48.3300],
+        bounds: [[-10.1860, -48.3450], [-10.2450, -48.3150]],
+        cor: "#f59e0b",
+        intensidade: "Média (18,21%)",
+        divida: "R$ 5.600,50",
+        tributos: "IPTU (104 Sul)",
+        score: "81,75",
+        status: "Em Aberto",
+        populacao: "125.000 hab.",
+        renda: "R$ 4.550,00",
+        densidade: "2.100,5 hab/km²"
+      },
+      {
+        nome: "Taquaralto",
+        centro: [-10.3200, -48.2980],
+        bounds: [[-10.3050, -48.3100], [-10.3350, -48.2850]],
+        cor: "#10b981",
+        intensidade: "Baixa (2,76%)",
+        divida: "R$ 850,00",
+        tributos: "IPTU (Setor Taquaralto)",
+        score: "20,00",
+        status: "Em Aberto (Beneficiário IPTU Social)",
+        populacao: "45.000 hab.",
+        renda: "R$ 2.200,00",
+        densidade: "1.200 hab/km²"
+      },
+      {
+        nome: "Jardim Aureny (Aureny III)",
+        centro: [-10.2750, -48.3100],
+        bounds: [[-10.2600, -48.3220], [-10.2900, -48.2980]],
+        cor: "#94a3b8",
+        intensidade: "Sem Dados de Débito (R$ 0,00)",
+        divida: "R$ 0,00",
+        tributos: "Nenhum débito cadastrado no piloto",
+        score: "N/A",
+        status: "Sem pendências fiscais cadastradas",
+        populacao: "32.000 hab.",
+        renda: "R$ 2.100,00",
+        densidade: "1.100 hab/km²"
+      }
+    ];
+
+    const camadasPoligonos = [];
+
+    if (map) {
+      setores.forEach((setor, idx) => {
+        // Polígono do setor
+        const rect = L.rectangle(setor.bounds, {
+          color: setor.cor,
+          weight: 2,
+          fillColor: setor.cor,
+          fillOpacity: 0.35
+        }).addTo(map);
+
+        // Marcador central
+        const marker = L.circleMarker(setor.centro, {
+          radius: 8,
+          fillColor: setor.cor,
+          color: '#ffffff',
+          weight: 2,
+          opacity: 1,
+          fillOpacity: 0.9
+        }).addTo(map);
+
+        const popupContent = `
+          <div class="popup-title">${setor.nome}</div>
+          <table class="popup-table">
+            <tr><td class="label">Intensidade:</td><td class="value" style="color: ${setor.cor}">${setor.intensidade}</td></tr>
+            <tr><td class="label">Dívida Ativa:</td><td class="value">${setor.divida}</td></tr>
+            <tr><td class="label">Tributos:</td><td class="value">${setor.tributos}</td></tr>
+            <tr><td class="label">Score Médio:</td><td class="value">${setor.score}</td></tr>
+            <tr><td class="label">Status:</td><td class="value">${setor.status}</td></tr>
+            <tr><td class="label">Renda Média (IBGE):</td><td class="value">${setor.renda}</td></tr>
+            <tr><td class="label">População (IBGE):</td><td class="value">${setor.populacao}</td></tr>
+            <tr><td class="label">Densidade Urbana:</td><td class="value">${setor.densidade}</td></tr>
+          </table>
+        `;
+
+        rect.bindPopup(popupContent);
+        marker.bindPopup(popupContent);
+
+        camadasPoligonos.push(rect);
+      });
+
+      // Legenda no canto inferior esquerdo
+      const legend = L.control({ position: 'bottomleft' });
+      legend.onAdd = function () {
+        const div = L.DomUtil.create('div', 'legend-box');
+        div.innerHTML = `
+          <div class="legend-title">Intensidade da Dívida Ativa</div>
+          <div class="legend-item"><div class="legend-color" style="background:#dc2626;"></div> Muito Alta (&gt; R$ 10.000)</div>
+          <div class="legend-item"><div class="legend-color" style="background:#f59e0b;"></div> Média (R$ 1.000 - R$ 10.000)</div>
+          <div class="legend-item"><div class="legend-color" style="background:#10b981;"></div> Baixa (&lt; R$ 1.000)</div>
+          <div class="legend-item"><div class="legend-color" style="background:#94a3b8;"></div> Sem Dados de Débito (R$ 0)</div>
+        `;
+        return div;
+      };
+      legend.addTo(map);
+    }
+
+    function focarSetor(index) {
+      if (map && camadasPoligonos[index]) {
+        map.fitBounds(camadasPoligonos[index].getBounds(), { padding: [40, 40] });
+        camadasPoligonos[index].openPopup();
+      }
+    }
+  </script>
+</body>
+</html>

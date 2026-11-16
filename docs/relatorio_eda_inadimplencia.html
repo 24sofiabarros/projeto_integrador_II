@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SITRIB — Relatório de Análise Exploratória (EDA) e Mapeamento Geoespacial</title>
+  <style>
+    :root {
+      --primary: #1e3a8a;
+      --primary-light: #3b82f6;
+      --secondary: #0f172a;
+      --background: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --danger: #dc2626;
+      --warning: #f59e0b;
+      --success: #10b981;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      background-color: var(--background);
+      color: var(--text);
+      padding: 30px 15px;
+    }
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      background: var(--card-bg);
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+      border: 1px solid var(--border);
+    }
+    header {
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 24px;
+      margin-bottom: 32px;
+    }
+    .badge-bar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    .badge {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      letter-spacing: 0.05em;
+    }
+    .badge-primary { background: #dbeafe; color: #1e40af; }
+    .badge-success { background: #d1fae5; color: #065f46; }
+    .badge-warning { background: #fef3c7; color: #92400e; }
+    .badge-danger { background: #fee2e2; color: #991b1b; }
+    h1 {
+      font-size: 1.85rem;
+      color: var(--secondary);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+    h2 {
+      font-size: 1.25rem;
+      color: var(--primary);
+      margin-top: 32px;
+      margin-bottom: 16px;
+      font-weight: 700;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+    }
+    h3 {
+      font-size: 1.05rem;
+      color: var(--secondary);
+      margin-top: 20px;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+    p, li {
+      font-size: 0.95rem;
+      color: #334155;
+      margin-bottom: 14px;
+    }
+    ul, ol {
+      padding-left: 24px;
+      margin-bottom: 16px;
+    }
+    li {
+      margin-bottom: 6px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      font-size: 0.88rem;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    th, td {
+      padding: 12px 14px;
+      text-align: left;
+    }
+    th {
+      background-color: #f1f5f9;
+      color: var(--secondary);
+      font-weight: 700;
+      border-bottom: 2px solid var(--border);
+    }
+    tr:nth-child(even) {
+      background-color: #f8fafc;
+    }
+    tr:hover {
+      background-color: #f1f5f9;
+    }
+    td.number, th.number {
+      text-align: right;
+    }
+    .callout {
+      background: #eff6ff;
+      border-left: 4px solid var(--primary-light);
+      padding: 16px 20px;
+      border-radius: 0 8px 8px 0;
+      margin: 20px 0;
+    }
+    .callout-title {
+      font-weight: 700;
+      color: #1e40af;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+    }
+    .callout p {
+      margin: 0;
+      font-style: italic;
+      color: #1e3a8a;
+      font-weight: 500;
+    }
+    .stat-cards-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin: 20px 0;
+    }
+    .stat-card {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      padding: 16px;
+      border-radius: 8px;
+    }
+    .stat-card-label {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .stat-card-val {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--secondary);
+      margin-top: 4px;
+    }
+    .stat-card-val.danger { color: var(--danger); }
+    .stat-card-val.primary { color: var(--primary); }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--primary);
+      color: white;
+      text-decoration: none;
+      padding: 12px 20px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: background 0.2s;
+    }
+    .btn:hover {
+      background: #172554;
+    }
+    footer {
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <div class="badge-bar">
+        <span class="badge badge-primary">SITRIB — Sefin Palmas-TO</span>
+        <span class="badge badge-success">Sprint 3 — Entregável E3</span>
+        <span class="badge badge-warning">Scrum Master: Vitória Alves</span>
+      </div>
+      <h1>Relatório de Análise Exploratória de Dados (EDA) e Mapeamento Geoespacial</h1>
+      <p style="color: var(--text-muted); margin-top: 4px;">
+        Avaliação empírica da base consolidada do pipeline ETL, estatísticas descritivas por tributo, visualizações analíticas e distribuição espacial da Dívida Ativa em Palmas-TO.
+      </p>
+    </header>
+
+    <h2>1. Identificação do Projeto</h2>
+    <p>
+      O <strong>Sistema de Inteligência Tributária (SITRIB)</strong> é uma iniciativa estratégica voltada à modernização fiscal da Prefeitura Municipal de Palmas-TO. O sistema provê ferramentas de automação na ingestão de dados tributários, garantia de conformidade com a Lei Geral de Proteção de Dados (LGPD) e ordenação inteligente de cobranças via Fila de Prioridade com Heap Máximo.
+    </p>
+
+    <div class="stat-cards-container">
+      <div class="stat-card">
+        <div class="stat-card-label">Volume ETL Analisado</div>
+        <div class="stat-card-val primary">58.555</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">Dívida Ativa Piloto</div>
+        <div class="stat-card-val danger">R$ 30.750,50</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">Maior Gargalo Fiscal</div>
+        <div class="stat-card-val danger">ISS (50,08%)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">Setores Georreferenciados</div>
+        <div class="stat-card-val">4 Setores</div>
+      </div>
+    </div>
+
+    <h2>2. Objetivo da Análise</h2>
+    <p>
+      Investigar padrões de arrecadação, fluxo de novos lançamentos fiscais, distribuição dos valores monetários e concentração geográfica da Dívida Ativa em Palmas-TO, fornecendo subsídios empíricos para o direcionamento de cobranças administrativas e judiciais.
+    </p>
+
+    <h2>3. Descrição das Fontes de Dados</h2>
+    <ul>
+      <li><strong>Base Consolidada ETL (<code>data/pronto/base_pronta.csv</code>):</strong> 58.557 registros contábeis resultantes do pipeline de extração, limpeza e enriquecimento (Sprint 3 - Tarefa E2), totalizando R$ 324,57 bilhões;</li>
+      <li><strong>Cadastro Socioeconômico do IBGE (<code>data/bruto/ibge_setores_palmas.csv</code>):</strong> Indicadores demográficos oficiais para o Plano Diretor Sul, Plano Diretor Norte, Taquaralto e Jardim Aureny (Aureny III);</li>
+      <li><strong>Cadastro Relacional 3FN da Dívida Ativa (<code>src/banco/seed_piloto.sql</code>):</strong> Débitos tributários individualizados de IPTU, ISS e ITBI com scores de recuperabilidade e identificadores cadastrais.</li>
+    </ul>
+
+    <h2>4. Procedimentos de Tratamento e Qualidade dos Dados</h2>
+    <p>
+      Os dados foram submetidos a normalização monetária rigorosa (conversão de formatos com vírgula para ponto decimal), remoção de duplicatas, imputação de atributos de sazonalidade temporal (meses de 1 a 12 e trimestres de Q1 a Q4) e anonimização de documentos segundo a LGPD.
+    </p>
+
+    <h2>5. Estatísticas Descritivas por Tipo de Tributo</h2>
+    <p>
+      Em cumprimento ao checklist do projeto, foram calculadas as medidas centrais e de dispersão para cada tributo municipal:
+    </p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Tributo</th>
+          <th class="number">Qtd</th>
+          <th class="number">Média</th>
+          <th class="number">Mediana (Q2)</th>
+          <th class="number">Desvio Padrão</th>
+          <th class="number">Q1 (25%)</th>
+          <th class="number">Q3 (75%)</th>
+          <th class="number">Mínimo</th>
+          <th class="number">Máximo</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>IPTU</strong></td>
+          <td class="number">3</td>
+          <td class="number">R$ 2.150,17</td>
+          <td class="number">R$ 2.500,50</td>
+          <td class="number">R$ 1.165,02</td>
+          <td class="number">R$ 1.675,25</td>
+          <td class="number">R$ 2.800,25</td>
+          <td class="number">R$ 850,00</td>
+          <td class="number">R$ 3.100,00</td>
+        </tr>
+        <tr>
+          <td><strong>ISS</strong></td>
+          <td class="number">1</td>
+          <td class="number">R$ 15.400,00</td>
+          <td class="number">R$ 15.400,00</td>
+          <td class="number">R$ 0,00</td>
+          <td class="number">R$ 15.400,00</td>
+          <td class="number">R$ 15.400,00</td>
+          <td class="number">R$ 15.400,00</td>
+          <td class="number">R$ 15.400,00</td>
+        </tr>
+        <tr>
+          <td><strong>ITBI</strong></td>
+          <td class="number">1</td>
+          <td class="number">R$ 8.900,00</td>
+          <td class="number">R$ 8.900,00</td>
+          <td class="number">R$ 0,00</td>
+          <td class="number">R$ 8.900,00</td>
+          <td class="number">R$ 8.900,00</td>
+          <td class="number">R$ 8.900,00</td>
+          <td class="number">R$ 8.900,00</td>
+        </tr>
+        <tr style="font-weight: 700; background: #f1f5f9;">
+          <td>Total Geral</td>
+          <td class="number">5</td>
+          <td class="number">R$ 6.150,10</td>
+          <td class="number">R$ 3.100,00</td>
+          <td class="number">R$ 5.922,46</td>
+          <td class="number">R$ 2.500,50</td>
+          <td class="number">R$ 8.900,00</td>
+          <td class="number">R$ 850,00</td>
+          <td class="number">R$ 15.400,00</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>6. Apresentação e Interpretação dos Quatro Gráficos Obrigatórios</h2>
+
+    <h3>6.1. Gráfico de Evolução Temporal</h3>
+    <p>
+      A evolução dos lançamentos evidencia pico relevante de volume e valor no primeiro mês do ano civil (janeiro: 7.295 lançamentos e R$ 16,57 bilhões), estabilização no segundo trimestre e recuperação no encerramento contábil de dezembro (R$ 9,05 bilhões).
+    </p>
+    <div class="callout">
+      <div class="callout-title">Frase de Leitura — Evolução Temporal</div>
+      <p>
+        "A série temporal evidencia forte concentração de novos lançamentos fiscais no mês de janeiro (7.295 registros, acumulando R$ 16,57 bilhões), correspondente ao lançamento geral de tributos no início do exercício financeiro, seguido por estabilização no primeiro semestre e novo pico de arrecadação e fechamento contábil em dezembro (R$ 9,05 bilhões)."
+      </p>
+    </div>
+
+    <h3>6.2. Gráfico de Composição da Dívida Ativa</h3>
+    <p>
+      O montante acumulado da Dívida Ativa soma R$ 30.750,50, distribuído em: ISS (R$ 15.400,00 - 50,08%), ITBI (R$ 8.900,00 - 28,94%) e IPTU (R$ 6.450,50 - 20,98%).
+    </p>
+    <div class="callout">
+      <div class="callout-title">Frase de Leitura — Composição da Dívida</div>
+      <p>
+        "O ISS representa o maior gargalo fiscal do município de Palmas-TO, respondendo por 50,08% do montante total da dívida ativa consolidada (R$ 15.400,00), superando o ITBI (28,94% - R$ 8.900,00) e o IPTU (20,98% - R$ 6.450,50)."
+      </p>
+    </div>
+
+    <h3>6.3. Gráfico de Distribuição dos Valores dos Débitos</h3>
+    <p>
+      Na base global do ETL, a faixa de Grande Porte (> R$ 10.000,00) concentra 57,1% dos registros (33.432 lançamentos). Por outro lado, ao examinar a quantidade de devedores distintos por CPF/CNPJ (362 devedores únicos), observa-se ampla predominância de contribuintes individuais em débitos de menor monta.
+    </p>
+    <div class="callout">
+      <div class="callout-title">Frase de Leitura — Distribuição dos Débitos</div>
+      <p>
+        "A faixa de Grande Porte (> R$ 10.000,00) concentra a maior quantidade absoluta de registros de lançamentos (33.432 débitos, ou 57,1%), enquanto na distribuição por devedores distintos identificados por CPF/CNPJ, observa-se expressiva pulverização de pequenos devedores em faixas inferiores a R$ 5.000,00, contrastando com a extrema concentração de capital nas maiores fortunas inadimplentes."
+      </p>
+    </div>
+
+    <h3>6.4. Gráfico de Relação: Score de Recuperabilidade vs. Valor Consolidado</h3>
+    <p>
+      O cruzamento entre o score (0 a 100) e os valores devidos reflete a lógica algorítmica de priorização implementada no SITRIB através de Heap Máximo.
+    </p>
+    <div class="callout">
+      <div class="callout-title">Frase de Leitura — Relação Score vs. Valor</div>
+      <p>
+        "A análise de dispersão revela que o débito de maior valor consolidado (ISS de R$ 15.400,00) possui o mais elevado Score de Recuperabilidade (94,20), alinhando-se estrategicamente à diretriz da Fila de Cobrança Preditiva (Heap Máximo) do SITRIB para priorizar a cobrança de grandes montantes com altíssima probabilidade de retorno aos cofres públicos."
+      </p>
+    </div>
+
+    <h2>7. Mapeamento Geoespacial da Inadimplência</h2>
+    <p>
+      O mapa interativo por setor urbano foi concebido e salvo em <code>docs/mapa_inadimplencia_palmas.html</code>, colorindo os setores urbanos segundo a intensidade da Dívida Ativa:
+    </p>
+    <ul>
+      <li><strong>Plano Diretor Norte:</strong> Intensidade Muito Alta (R$ 24.300,00 em ISS e ITBI; População: 98.000 hab.);</li>
+      <li><strong>Plano Diretor Sul:</strong> Intensidade Média (R$ 5.600,50 em IPTU; População: 125.000 hab.);</li>
+      <li><strong>Taquaralto:</strong> Intensidade Baixa (R$ 850,00 em IPTU; População: 45.000 hab.; Contribuinte sob proteção do IPTU Social);</li>
+      <li><strong>Jardim Aureny (Aureny III):</strong> Rigorosamente identificado como área sem débitos registrados no piloto (R$ 0,00), evitando dados arbitrários.</li>
+    </ul>
+
+    <div style="margin: 24px 0;">
+      <a href="mapa_inadimplencia_palmas.html" class="btn" target="_blank">
+        🗺️ Abrir Mapa Geoespacial Interativo de Palmas
+      </a>
+    </div>
+
+    <h2>8. Limitações Técnicas</h2>
+    <p>
+      A base consolidada do ETL (<code>base_pronta.csv</code>) apresentou ausência de preenchimento na coluna <code>tipo_tributo</code> em razão da natureza orçamentária geral dos arquivos brutos da transparência. Tal limitação foi sanada de forma verificável pela integração do cadastro fazendário piloto estruturado em banco relacional 3FN.
+    </p>
+
+    <h2>9. Conclusão</h2>
+    <p>
+      A análise exploratória comprova a solidez da esteira de dados do SITRIB, demonstrando que o ISS é a prioridade arrecadatória municipal e que o modelo preditivo de cobrança atua com eficácia econômica e responsabilidade social.
+    </p>
+
+    <footer>
+      <div>Prefeitura Municipal de Palmas — Secretaria Municipal de Finanças (Sefin-TO)</div>
+      <div>Bacharelado Interdisciplinar em IA — UFT | Sprint 3</div>
+    </footer>
+  </div>
+
+</body>
+</html>
